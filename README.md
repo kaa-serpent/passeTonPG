@@ -6,6 +6,10 @@ Le sélecteur Français / English dans l’en-tête change immédiatement la lan
 
 Next.js 16, React 19, TypeScript, Tailwind CSS 4, Lucide React et SQLite intégré à Node.js 24. Docker Compose lance l’application et Nginx ; la base reste dans un volume Docker.
 
+## Hébergement Mustelinet
+
+Production : [passetonpg.accesdiscret.fr](https://passetonpg.accesdiscret.fr). VM dédiée `m1.tiny` (1 vCPU, 1 Gio, disque 10 Gio), image Docker distribuée par les releases GitHub. La fiche d'installation, les contrôles, les sauvegardes et les commandes de mise à jour figurent dans [deploy/EXPLOITATION.md](deploy/EXPLOITATION.md).
+
 ## Démarrage local
 
 Installer Docker Desktop avec les conteneurs Linux, puis ouvrir PowerShell dans ce dossier :
