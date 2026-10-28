@@ -1,0 +1,35 @@
+#cloud-config
+hostname: passetonpg-prod
+package_update: true
+packages: [ca-certificates, curl, git, nginx, openssh-server]
+ssh_pwauth: false
+disable_root: true
+write_files:
+  - path: /etc/cloudflared/tunnel-token
+    owner: root:root
+    permissions: '0600'
+    content: |
+      REMPLACER_PAR_LE_JETON_DU_TUNNEL
+  - path: /etc/systemd/system/cloudflared.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Cloudflare Tunnel PasseTonPG
+      Wants=network-online.target
+      After=network-online.target
+      [Service]
+      ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run --token-file /etc/cloudflared/tunnel-token
+      Restart=on-failure
+      RestartSec=5s
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - [bash, -ec, 'install -d -m 0755 /usr/share/keyrings /etc/apt/keyrings; curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg -o /usr/share/keyrings/cloudflare-main.gpg; curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc; chmod a+r /etc/apt/keyrings/docker.asc']
+  - [bash, -ec, 'echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" > /etc/apt/sources.list.d/cloudflared.list; echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list']
+  - [apt-get, update]
+  - [apt-get, install, -y, cloudflared, docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+  - [bash, -ec, 'install -d -m 0700 /var/lib/passetonpg /var/lib/passetonpg/rollback; install -d -o 1000 -g 1000 -m 0700 /var/lib/passetonpg/data; install -d -m 0755 /opt/passetonpg-releases']
+  - [systemctl, enable, --now, ssh, docker, nginx]
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, --now, cloudflared]
+  - [bash, -ec, 'systemctl is-active --quiet ssh docker nginx cloudflared; echo MUSTELINET_BOOTSTRAP_READY; ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub']

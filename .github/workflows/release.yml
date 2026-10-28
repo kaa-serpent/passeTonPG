@@ -1,0 +1,34 @@
+name: Release Docker
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construire et tester
+        run: docker build --target production --label org.opencontainers.image.revision=${{ github.sha }} -t passetonpg:${{ github.sha }} .
+      - name: Valider la santé sous 512 Mio
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name release-test --memory 512m -e ADMIN_USERNAME=ci-admin -e ADMIN_PASSWORD=ci-disposable-password passetonpg:${{ github.sha }}
+          for i in {1..60}; do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' release-test)" = healthy ]; then exit 0; fi
+            sleep 2
+          done
+          docker logs --tail 50 release-test
+          exit 1
+      - name: Publier l’image et son empreinte
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          docker save passetonpg:${{ github.sha }} | gzip > passetonpg-linux-amd64.tar.gz
+          sha256sum passetonpg-linux-amd64.tar.gz > SHA256SUMS
+          printf 'Commit : %s\nImage Linux amd64 construite et testée dans Docker, pour la VM tiny Mustelinet.\n' '${{ github.sha }}' > release-notes.txt
+          gh release create '${{ github.ref_name }}' passetonpg-linux-amd64.tar.gz SHA256SUMS --title 'PasseTonPG ${{ github.ref_name }}' --notes-file release-notes.txt

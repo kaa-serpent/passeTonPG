@@ -1,0 +1,7 @@
+[Unit]
+Description=Sauvegarde SQLite PasseTonPG
+After=docker.service passetonpg.service
+Requires=docker.service
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/passetonpg/deploy/backup.sh

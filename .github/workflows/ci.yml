@@ -1,0 +1,28 @@
+name: Docker validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests, types et image de production
+        run: docker build --target production --label org.opencontainers.image.revision=${{ github.sha }} -t passetonpg:${{ github.sha }} .
+      - name: Santé avec SQLite persistante
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name passetonpg-ci --memory 512m -p 127.0.0.1:3000:3000 -e ADMIN_USERNAME=ci-admin -e ADMIN_PASSWORD=ci-disposable-password passetonpg:${{ github.sha }}
+          for i in {1..60}; do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' passetonpg-ci)" = healthy ]; then
+              curl --fail --max-time 5 http://127.0.0.1:3000/api/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d=={"status":"ok","service":"passetonpg"}'
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs --tail 50 passetonpg-ci
+          exit 1

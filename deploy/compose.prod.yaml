@@ -1,0 +1,32 @@
+name: passetonpg
+services:
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE doit désigner une image validée par SHA}
+    env_file:
+      - /etc/passetonpg.env
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_PATH: /app/data/passetonpg.sqlite
+      APP_ORIGIN: https://passetonpg.accesdiscret.fr
+      COOKIE_SECURE: "true"
+      TRUST_PROXY: "true"
+      NODE_OPTIONS: --max-old-space-size=384
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - /var/lib/passetonpg/data:/app/data
+    init: true
+    restart: unless-stopped
+    mem_limit: 512m
+    pids_limit: 100
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "3"

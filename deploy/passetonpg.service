@@ -1,0 +1,17 @@
+[Unit]
+Description=PasseTonPG
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/passetonpg
+EnvironmentFile=/var/lib/passetonpg/current.env
+ExecStart=/usr/bin/docker compose -f deploy/compose.prod.yaml up -d --remove-orphans --wait --wait-timeout 120
+ExecStop=/usr/bin/docker compose -f deploy/compose.prod.yaml stop
+RemainAfterExit=yes
+TimeoutStartSec=150
+
+[Install]
+WantedBy=multi-user.target

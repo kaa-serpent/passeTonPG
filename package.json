@@ -1,0 +1,32 @@
+{
+  "name": "passetonpg",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "prebuild": "node scripts/stamp-sw.mjs",
+    "build": "next build --webpack",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "seed:catalog": "node scripts/seed-catalog.mjs",
+    "import:pdf-catalog": "node scripts/import-pdf-catalog.mjs"
+  },
+  "dependencies": {
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "lucide-react": "^0.577.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tsx": "^4.21.0"
+  }
+}
